@@ -684,6 +684,35 @@ module cva6
       fpu_valid_ex_id,
       acc_valid_ex_id
     };
+  end else if (CVA6ExtendCfg.CMOEn) begin
+    assign trans_id_ex_id = {
+      cmo_trans_id_ex_id,
+      flu_trans_id_ex_id,
+      load_trans_id_ex_id,
+      store_trans_id_ex_id,
+      fpu_trans_id_ex_id
+    };
+    assign wbdata_ex_id = {
+      cmo_result_ex_id,
+      flu_result_ex_id,
+      load_result_ex_id,
+      store_result_ex_id,
+      fpu_result_ex_id
+    };
+    assign ex_ex_ex_id = {
+      cmo_exception_ex_id,
+      flu_exception_ex_id,
+      load_exception_ex_id,
+      store_exception_ex_id,
+      fpu_exception_ex_id
+    };
+    assign wt_valid_ex_id = {
+      cmo_valid_ex_id,
+      flu_valid_ex_id,
+      load_valid_ex_id,
+      store_valid_ex_id,
+      fpu_valid_ex_id
+    };
   end else if (CVA6ExtendCfg.CvxifEn && !CVA6ExtendCfg.CMOEn) begin
     assign trans_id_ex_id = {
       x_trans_id_ex_id,

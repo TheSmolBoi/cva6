@@ -74,6 +74,8 @@ package config_pkg;
     bit                          XFVec;
     // CV-X-IF coprocessor interface is supported
     bit                          CvxifEn;
+    // CMO extension
+    bit                          CMOEn;
     // Zicond RISC-V extension
     bit                          ZiCondExtEn;
     // CLIC extension

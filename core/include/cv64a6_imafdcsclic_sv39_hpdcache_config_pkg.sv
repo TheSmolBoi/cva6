@@ -102,10 +102,7 @@ package cva6_config_pkg;
       ZiCondExtEn: bit'(CVA6ConfigZiCondExtEn),
       RVSCLIC: bit'(CVA6ConfigSclicExtEn),
       // Extended
-      RVF:
-      bit'(
-      0
-      ),
+      RVF: bit'(0),
       RVD: bit'(0),
       FpPresent: bit'(0),
       NSX: bit'(0),
@@ -133,10 +130,7 @@ package cva6_config_pkg;
       NOCType: config_pkg::NOC_TYPE_AXI4_ATOP,
       CLICNumInterruptSrc: unsigned'(256),
       // idempotent region
-      NrNonIdempotentRules:
-      unsigned'(
-      2
-      ),
+      NrNonIdempotentRules: unsigned'(2),
       NonIdempotentAddrBase: 1024'({64'b0, 64'b0}),
       NonIdempotentLength: 1024'({64'b0, 64'b0}),
       NrExecuteRegionRules: unsigned'(3),

@@ -129,6 +129,7 @@ sources:
           - core/mmu_sv39x4/cva6_mmu_sv39x4.sv
           - core/mmu_sv39x4/cva6_ptw_sv39x4.sv
           - core/cva6_clic_controller.sv
+          - core/cmo_fu.sv
 
       - target: cv64a6_imafdc_sv39_wb
         files:

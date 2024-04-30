@@ -274,7 +274,7 @@ package ariane_pkg;
     FPU_VEC,    // 8
     CVXIF,      // 9
     ACCEL,      // 10
-    CMO,        // 11
+    CMO         // 11
   } fu_t;
 
   localparam EXC_OFF_RST = 8'h80;
