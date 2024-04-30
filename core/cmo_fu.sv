@@ -101,7 +101,7 @@ module cmo_fu import ariane_pkg::*; (
                     cmo_buf_d.valid = 1'b1;
                     cmo_buf_d.trans_id = fu_data_i.trans_id;
                     cmo_buf_d.address = fu_data_i.operand_a;
-                    cmo_buf_d.operator = fu_data_i.operator;
+                    cmo_buf_d.operator = fu_data_i.operation;
                     cmo_fsm_d = CMO_FORWARD;
                 end
             end
