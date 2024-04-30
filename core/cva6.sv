@@ -174,7 +174,8 @@ module cva6
   localparam bit XF8Vec     = CVA6Cfg.XF8     & CVA6Cfg.XFVec & FLen>8;  // FP8 vectors available if vectors and larger fmt enabled
 
   localparam bit EnableAccelerator = CVA6Cfg.RVV;  // Currently only used by V extension (Ara)
-  localparam int unsigned NrWbPorts = (CVA6Cfg.CvxifEn || EnableAccelerator) ? 5 : 4;
+  localparam int unsigned NrWbPorts = ((CVA6Cfg.CvxifEn || EnableAccelerator) ? 5 : 4) + 
+                                      (CVA6Cfg.CMOEn ? 1 : 0);
 
   localparam NrRgprPorts = 2;
 
@@ -200,6 +201,7 @@ module cva6
     CVA6Cfg.RVZCB,
     CVA6Cfg.XFVec,
     CVA6Cfg.CvxifEn,
+    CVA6Cfg.CMOEn,
     CVA6Cfg.ZiCondExtEn,
     CVA6Cfg.RVSCLIC,
     // Extended
@@ -345,6 +347,17 @@ module cva6
   // CSR
   logic csr_valid_id_ex;
   logic csr_hs_ld_st_inst_ex;
+  // CMO
+  logic                     cmo_valid_id_ex;
+  logic                     cmo_ready_ex_id;
+  logic [TRANS_ID_BITS-1:0] cmo_trans_id_ex_id;
+  riscv::xlen_t             cmo_result_ex_id;
+  logic                     cmo_valid_ex_id;
+  exception_t               cmo_exception_ex_id;
+  cmo_req_t                 cmo_ic_req;
+  cmo_resp_t                cmo_ic_resp;
+  cmo_req_t                 cmo_dc_req;
+  cmo_resp_t                cmo_dc_resp;
   // CVXIF
   logic [TRANS_ID_BITS-1:0] x_trans_id_ex_id;
   riscv::xlen_t x_result_ex_id;
@@ -605,7 +618,73 @@ module cva6
   exception_t [NrWbPorts-1:0] ex_ex_ex_id;  // exception from execute, ex_stage to id_stage
   logic [NrWbPorts-1:0] wt_valid_ex_id;
 
-  if (CVA6ExtendCfg.CvxifEn) begin
+  if (CVA6ExtendCfg.CvxifEn && CVA6ExtendCfg.CMOEn) begin
+    assign trans_id_ex_id = {
+      cmo_trans_id_ex_id,
+      x_trans_id_ex_id,
+      flu_trans_id_ex_id,
+      load_trans_id_ex_id,
+      store_trans_id_ex_id,
+      fpu_trans_id_ex_id
+    };
+    assign wbdata_ex_id = {
+      cmo_result_ex_id,
+      x_result_ex_id,
+      flu_result_ex_id,
+      load_result_ex_id,
+      store_result_ex_id,
+      fpu_result_ex_id
+    };
+    assign ex_ex_ex_id = {
+      cmo_exception_ex_id,
+      x_exception_ex_id,
+      flu_exception_ex_id,
+      load_exception_ex_id,
+      store_exception_ex_id,
+      fpu_exception_ex_id
+    };
+    assign wt_valid_ex_id = {
+      cmo_valid_ex_id,
+      x_valid_ex_id,
+      flu_valid_ex_id,
+      load_valid_ex_id,
+      store_valid_ex_id,
+      fpu_valid_ex_id
+    };
+  end else if (CVA6ExtendCfg.EnableAccelerator && CVA6ExtendCfg.CMOEn) begin
+    assign trans_id_ex_id = {
+      cmo_trans_id_ex_id,
+      flu_trans_id_ex_id,
+      load_trans_id_ex_id,
+      store_trans_id_ex_id,
+      fpu_trans_id_ex_id,
+      acc_trans_id_ex_id
+    };
+    assign wbdata_ex_id = {
+      cmo_result_ex_id,
+      flu_result_ex_id,
+      load_result_ex_id,
+      store_result_ex_id,
+      fpu_result_ex_id,
+      acc_result_ex_id
+    };
+    assign ex_ex_ex_id = {
+      cmo_exception_ex_id,
+      flu_exception_ex_id,
+      load_exception_ex_id,
+      store_exception_ex_id,
+      fpu_exception_ex_id,
+      acc_exception_ex_id
+    };
+    assign wt_valid_ex_id = {
+      cmo_valid_ex_id,
+      flu_valid_ex_id,
+      load_valid_ex_id,
+      store_valid_ex_id,
+      fpu_valid_ex_id,
+      acc_valid_ex_id
+    };
+  end else if (CVA6ExtendCfg.CvxifEn && !CVA6ExtendCfg.CMOEn) begin
     assign trans_id_ex_id = {
       x_trans_id_ex_id,
       flu_trans_id_ex_id,
@@ -614,7 +693,11 @@ module cva6
       fpu_trans_id_ex_id
     };
     assign wbdata_ex_id = {
-      x_result_ex_id, flu_result_ex_id, load_result_ex_id, store_result_ex_id, fpu_result_ex_id
+      x_result_ex_id,
+      flu_result_ex_id,
+      load_result_ex_id,
+      store_result_ex_id,
+      fpu_result_ex_id
     };
     assign ex_ex_ex_id = {
       x_exception_ex_id,
@@ -624,9 +707,13 @@ module cva6
       fpu_exception_ex_id
     };
     assign wt_valid_ex_id = {
-      x_valid_ex_id, flu_valid_ex_id, load_valid_ex_id, store_valid_ex_id, fpu_valid_ex_id
+      x_valid_ex_id,
+      flu_valid_ex_id,
+      load_valid_ex_id,
+      store_valid_ex_id,
+      fpu_valid_ex_id
     };
-  end else if (CVA6ExtendCfg.EnableAccelerator) begin
+  end else if (CVA6ExtendCfg.EnableAccelerator && !CVA6ExtendCfg.CMOEn) begin
     assign trans_id_ex_id = {
       flu_trans_id_ex_id,
       load_trans_id_ex_id,
@@ -635,7 +722,11 @@ module cva6
       acc_trans_id_ex_id
     };
     assign wbdata_ex_id = {
-      flu_result_ex_id, load_result_ex_id, store_result_ex_id, fpu_result_ex_id, acc_result_ex_id
+      flu_result_ex_id,
+      load_result_ex_id,
+      store_result_ex_id,
+      fpu_result_ex_id,
+      acc_result_ex_id
     };
     assign ex_ex_ex_id = {
       flu_exception_ex_id,
@@ -645,19 +736,37 @@ module cva6
       acc_exception_ex_id
     };
     assign wt_valid_ex_id = {
-      flu_valid_ex_id, load_valid_ex_id, store_valid_ex_id, fpu_valid_ex_id, acc_valid_ex_id
+      flu_valid_ex_id,
+      load_valid_ex_id,
+      store_valid_ex_id,
+      fpu_valid_ex_id,
+      acc_valid_ex_id
     };
   end else begin
     assign trans_id_ex_id = {
-      flu_trans_id_ex_id, load_trans_id_ex_id, store_trans_id_ex_id, fpu_trans_id_ex_id
+      flu_trans_id_ex_id,
+      load_trans_id_ex_id,
+      store_trans_id_ex_id,
+      fpu_trans_id_ex_id
     };
     assign wbdata_ex_id = {
-      flu_result_ex_id, load_result_ex_id, store_result_ex_id, fpu_result_ex_id
+      flu_result_ex_id,
+      load_result_ex_id,
+      store_result_ex_id,
+      fpu_result_ex_id
     };
     assign ex_ex_ex_id = {
-      flu_exception_ex_id, load_exception_ex_id, store_exception_ex_id, fpu_exception_ex_id
+      flu_exception_ex_id,
+      load_exception_ex_id,
+      store_exception_ex_id,
+      fpu_exception_ex_id
     };
-    assign wt_valid_ex_id = {flu_valid_ex_id, load_valid_ex_id, store_valid_ex_id, fpu_valid_ex_id};
+    assign wt_valid_ex_id = {
+      flu_valid_ex_id,
+      load_valid_ex_id,
+      store_valid_ex_id,
+      fpu_valid_ex_id
+    };
   end
 
   if (CVA6ExtendCfg.CvxifEn && CVA6ExtendCfg.EnableAccelerator) begin : gen_err_xif_and_acc
@@ -710,6 +819,9 @@ module cva6
       .fpu_rm_o              (fpu_rm_id_ex),
       // CSR
       .csr_valid_o           (csr_valid_id_ex),
+      // CMO
+      .cmo_ready_i           (cmo_ready_ex_id),
+      .cmo_valid_o           (cmo_valid_id_ex),
       // CVXIF
       .x_issue_valid_o       (x_issue_valid_id_ex),
       .x_issue_ready_i       (x_issue_ready_ex_id),
@@ -775,6 +887,17 @@ module cva6
       .csr_addr_o(csr_addr_ex_csr),
       .csr_commit_i(csr_commit_commit_ex),  // from commit
       .csr_hs_ld_st_inst_o(csr_hs_ld_st_inst_ex),  // signals a Hypervisor Load/Store Instruction
+     // CMO
+     .cmo_ready_o            ( cmo_ready_ex_id             ),
+     .cmo_valid_i            ( cmo_valid_id_ex             ),
+     .cmo_trans_id_o         ( cmo_trans_id_ex_id          ),
+     .cmo_exception_o        ( cmo_exception_ex_id         ),
+     .cmo_result_o           ( cmo_result_ex_id            ),
+     .cmo_valid_o            ( cmo_valid_ex_id             ),
+     .cmo_dc_req_o           ( cmo_dc_req                  ),
+     .cmo_dc_resp_i          ( cmo_dc_resp                 ),
+     .cmo_ic_req_o           ( cmo_ic_req                  ),
+     .cmo_ic_resp_i          ( cmo_ic_resp                 ),
       // MULT
       .mult_valid_i(mult_valid_id_ex),
       // LSU
@@ -1167,6 +1290,10 @@ module cva6
         .inval_valid_i     (inval_valid),
         .inval_ready_o     (inval_ready)
     );
+  
+    assign cmo_dc_resp = '0,
+           cmo_ic_resp = '0;
+         
   end else if (DCACHE_TYPE == int'(config_pkg::HPDCACHE)) begin : gen_cache_hpd
     cva6_hpdcache_subsystem #(
         .CVA6Cfg   (CVA6ExtendCfg),
@@ -1178,8 +1305,8 @@ module cva6
         .axi_r_chan_t (r_chan_t),
         .noc_req_t (noc_req_t),
         .noc_resp_t(noc_resp_t),
-        .cmo_req_t (logic  /*FIXME*/),
-        .cmo_rsp_t (logic  /*FIXME*/)
+        .cmo_req_t (cmo_req_t),
+        .cmo_rsp_t (cmo_rsp_t)
     ) i_cache_subsystem (
         .clk_i (clk_i),
         .rst_ni(rst_ni),
@@ -1200,8 +1327,8 @@ module cva6
         .dcache_amo_req_i (amo_req),
         .dcache_amo_resp_o(amo_resp),
 
-        .dcache_cmo_req_i ('0  /*FIXME*/),
-        .dcache_cmo_resp_o(  /*FIXME*/),
+        .dcache_cmo_req_i (cmo_dc_req),
+        .dcache_cmo_resp_o(cmo_dc_resp),
 
         .dcache_req_ports_i(dcache_req_to_cache),
         .dcache_req_ports_o(dcache_req_from_cache),
@@ -1224,6 +1351,7 @@ module cva6
         .noc_resp_i(noc_resp_i)
     );
     assign inval_ready = 1'b1;
+    assign cmo_ic_resp = '0;
   end else begin : gen_cache_wb
     std_cache_subsystem #(
         // note: this only works with one cacheable region
@@ -1271,6 +1399,8 @@ module cva6
     );
     assign dcache_commit_wbuffer_not_ni = 1'b1;
     assign inval_ready                  = 1'b1;
+    assign cmo_dc_resp = '0,
+           cmo_ic_resp = '0;
   end
 
   // ----------------

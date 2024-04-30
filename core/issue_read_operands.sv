@@ -95,6 +95,9 @@ module issue_read_operands
     output logic [2:0] fpu_rm_o,
     // CSR result is valid - TO_BE_COMPLETED
     output logic csr_valid_o,
+    // CMO
+    input logic cmo_ready_i, // FU is ready
+    output logic cmo_valid_o, // Output is valid
     // CVXIF result is valid - TO_BE_COMPLETED
     output logic cvxif_valid_o,
     // CVXIF is ready - TO_BE_COMPLETED
@@ -130,6 +133,7 @@ module issue_read_operands
   logic [ 2:0] fpu_rm_q;
   logic        lsu_valid_q;
   logic        csr_valid_q;
+  logic        cmo_valid_q;
   logic        branch_valid_q;
   logic        cvxif_valid_q;
   logic [31:0] cvxif_off_instr_q;
@@ -161,6 +165,7 @@ module issue_read_operands
   assign branch_valid_o      = branch_valid_q;
   assign lsu_valid_o         = lsu_valid_q;
   assign csr_valid_o         = csr_valid_q;
+  assign cmo_valid_o         = cmo_valid_q;
   assign mult_valid_o        = mult_valid_q;
   assign fpu_valid_o         = fpu_valid_q;
   assign fpu_fmt_o           = fpu_fmt_q;
@@ -181,6 +186,7 @@ module issue_read_operands
       ALU, CTRL_FLOW, CSR, MULT: fu_busy = ~flu_ready_i;
       LOAD, STORE: fu_busy = ~lsu_ready_i;
       CVXIF: fu_busy = ~cvxif_ready_i;
+      CMO: fu_busy = ~cmo_ready_i;
       default: begin
         if (CVA6Cfg.FpPresent && (issue_instr_i.fu == FPU || issue_instr_i.fu == FPU_VEC)) begin
           fu_busy = ~fpu_ready_i;
@@ -331,6 +337,7 @@ module issue_read_operands
       fpu_fmt_q      <= 2'b0;
       fpu_rm_q       <= 3'b0;
       csr_valid_q    <= 1'b0;
+      cmo_valid_q    <= 1'b0;
       branch_valid_q <= 1'b0;
     end else begin
       alu_valid_q    <= 1'b0;
@@ -340,6 +347,7 @@ module issue_read_operands
       fpu_fmt_q      <= 2'b0;
       fpu_rm_q       <= 3'b0;
       csr_valid_q    <= 1'b0;
+      cmo_valid_q    <= 1'b0;
       branch_valid_q <= 1'b0;
       // Exception pass through:
       // If an exception has occurred simply pass it through
@@ -360,6 +368,9 @@ module issue_read_operands
           end
           CSR: begin
             csr_valid_q <= 1'b1;
+          end
+          CMO: begin
+            cmo_valid_q <= 1'b1;
           end
           default: begin
             if (issue_instr_i.fu == FPU && CVA6Cfg.FpPresent) begin
@@ -382,6 +393,7 @@ module issue_read_operands
         mult_valid_q   <= 1'b0;
         fpu_valid_q    <= 1'b0;
         csr_valid_q    <= 1'b0;
+        cmo_valid_q    <= 1'b0;
         branch_valid_q <= 1'b0;
       end
     end
