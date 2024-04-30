@@ -1335,7 +1335,7 @@ module cva6
         .noc_req_t (noc_req_t),
         .noc_resp_t(noc_resp_t),
         .cmo_req_t (cmo_req_t),
-        .cmo_rsp_t (cmo_rsp_t)
+        .cmo_rsp_t (cmo_resp_t)
     ) i_cache_subsystem (
         .clk_i (clk_i),
         .rst_ni(rst_ni),
