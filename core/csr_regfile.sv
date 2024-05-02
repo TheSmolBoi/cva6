@@ -2465,7 +2465,7 @@ module csr_regfile
       mscratch_q       <= {riscv::XLEN{1'b0}};
       mtval_q          <= {riscv::XLEN{1'b0}};
       menvcfg_q        <= 64'hC0000000000000F1; // FIXME: this hardcode certainly isn't good
-      senvcfg_q        <= 64'hC0000000000000F1; // FIXME: this hardcode certainly isn't good
+      senvcfg_q        <= 64'h00000000000000F1; // FIXME: this hardcode certainly isn't good
       henvcfg_q        <= 64'hC0000000000000F1; // FIXME: this hardcode certainly isn't good
       dcache_q         <= {{riscv::XLEN - 1{1'b0}}, 1'b1};
       icache_q         <= {{riscv::XLEN - 1{1'b0}}, 1'b1};

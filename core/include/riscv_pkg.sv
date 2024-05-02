@@ -814,8 +814,6 @@ package riscv;
   localparam logic [63:0] SENVCFG_CBIE = 'h00000030;
   localparam logic [63:0] SENVCFG_CBCFE = 'h00000040;
   localparam logic [63:0] SENVCFG_CBZE = 'h00000080;
-  localparam logic [63:0] SENVCFG_PBMTE = 64'h4000000000000000;
-  localparam logic [63:0] SENVCFG_STCE = 64'h8000000000000000;
   
   localparam logic [63:0] HENVCFG_FIOM = 'h00000001;
   localparam logic [63:0] HENVCFG_CBIE = 'h00000030;
