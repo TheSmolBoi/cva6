@@ -79,7 +79,11 @@ module decoder
     // Instruction - ISSUE_STAGE
     output logic [31:0] orig_instr_o,
     // Is a control flow instruction - ISSUE_STAGE
-    output logic is_control_flow_instr_o
+    output logic is_control_flow_instr_o,
+    // xenvcfg for CBO instructions - CSR_REGFILE
+    input riscv::menvcfg_rv_t menvcfg_i,
+    input riscv::senvcfg_rv_t senvcfg_i,
+    input riscv::henvcfg_rv_t henvcfg_i
 );
   logic illegal_instr;
   logic illegal_instr_bm;
@@ -439,13 +443,60 @@ module decoder
                 instruction_o.fu = CMO;
                 instruction_o.rs1 = instr.itype.rs1;
                 case (instr.itype.imm)
-                  12'b000000000000: instruction_o.op = ariane_pkg::FU_CMO_INVAL;
-                  12'b000000000001: instruction_o.op = ariane_pkg::FU_CMO_CLEAN;
-                  12'b000000000010: instruction_o.op = ariane_pkg::FU_CMO_FLUSH;
-                  12'b000000000100: instruction_o.op = ariane_pkg::FU_CMO_ZERO;
-                  12'b100000000000: instruction_o.op = ariane_pkg::FU_CMO_INVAL_ALL;
-                  12'b100000000001: instruction_o.op = ariane_pkg::FU_CMO_CLEAN_ALL;
-                  12'b100000000010: instruction_o.op = ariane_pkg::FU_CMO_FLUSH_ALL;
+                  12'b000000000000: begin
+                    if (((priv_lvl_i != riscv::PRIV_LVL_M) && (menvcfg_i.cbie == 2'b00)) ||
+                        ((priv_lvl_i == riscv::PRIV_LVL_U) && (senvcfg_i.cbie == 2'b00))) begin
+                      illegal_instr = 1'b1;
+                    end else if ((((priv_lvl_i == riscv::PRIV_LVL_S) && v_i) && (henvcfg_i.cbie == 2'b00)) ||
+                                 (((priv_lvl_i == riscv::PRIV_LVL_U) && v_i) && ((henvcfg_i.cbie == 2'b00) || (senvcfg_i.cbie == 2'b00)))) begin
+                      virtual_illegal_instr = 1'b1;
+                    end else begin
+                      if (((priv_lvl_i != riscv::PRIV_LVL_M) && (menvcfg_i.cbie == 2'b01)) ||
+                          ((priv_lvl_i == riscv::PRIV_LVL_U) && (senvcfg_i.cbie == 2'b01)) ||
+                          (((priv_lvl_i == riscv::PRIV_LVL_S) && v_i) && (henvcfg_i.cbie == 2'b01)) ||
+                          (((priv_lvl_i == riscv::PRIV_LVL_U) && v_i) && ((henvcfg_i.cbie == 2'b01) || (senvcfg_i.cbie == 2'b01)))) begin
+                        instruction_o.op = ariane_pkg::FU_CMO_FLUSH;
+                      end else begin
+                        instruction_o.op = ariane_pkg::FU_CMO_INVAL;
+                      end
+                    end
+                  end
+                  12'b000000000001: begin
+                    if (((priv_lvl_i != riscv::PRIV_LVL_M) && !menvcfg_i.cbcfe) ||
+                        ((priv_lvl_i == riscv::PRIV_LVL_U) && !senvcfg_i.cbcfe)) begin
+                      illegal_instr = 1'b1;
+                    end else if ((((priv_lvl_i == riscv::PRIV_LVL_S) && v_i) && !henvcfg_i.cbcfe) ||
+                                 (((priv_lvl_i == riscv::PRIV_LVL_U) && v_i) && !(henvcfg_i.cbcfe && senvcfg_i.cbcfe))) begin
+                      virtual_illegal_instr = 1'b1;
+                    end else begin
+                      instruction_o.op = ariane_pkg::FU_CMO_CLEAN;
+                    end
+                  end
+                  12'b000000000010: begin
+                    if (((priv_lvl_i != riscv::PRIV_LVL_M) && !menvcfg_i.cbcfe) ||
+                        ((priv_lvl_i == riscv::PRIV_LVL_U) && !senvcfg_i.cbcfe)) begin
+                      illegal_instr = 1'b1;
+                    end else if ((((priv_lvl_i == riscv::PRIV_LVL_S) && v_i) && !henvcfg_i.cbcfe) ||
+                                 (((priv_lvl_i == riscv::PRIV_LVL_U) && v_i) && !(henvcfg_i.cbcfe && senvcfg_i.cbcfe))) begin
+                      virtual_illegal_instr = 1'b1;
+                    end else begin
+                      instruction_o.op = ariane_pkg::FU_CMO_FLUSH;
+                    end
+                  end
+                  12'b000000000100: begin
+                    if (((priv_lvl_i != riscv::PRIV_LVL_M) && !menvcfg_i.cbze) ||
+                        ((priv_lvl_i == riscv::PRIV_LVL_U) && !senvcfg_i.cbze)) begin
+                      illegal_instr = 1'b1;
+                    end else if ((((priv_lvl_i == riscv::PRIV_LVL_S) && v_i) && !henvcfg_i.cbze) ||
+                                 (((priv_lvl_i == riscv::PRIV_LVL_U) && v_i) && !(henvcfg_i.cbze && senvcfg_i.cbze))) begin
+                      virtual_illegal_instr = 1'b1;
+                    end else begin
+                      instruction_o.op = ariane_pkg::FU_CMO_ZERO;
+                    end
+                  end
+                  12'b100000000000: instruction_o.op = ariane_pkg::FU_CMO_INVAL_ALL; // Not part of RiscV spec
+                  12'b100000000001: instruction_o.op = ariane_pkg::FU_CMO_CLEAN_ALL; // Not part of RiscV spec
+                  12'b100000000010: instruction_o.op = ariane_pkg::FU_CMO_FLUSH_ALL; // Not part of RiscV spec
                   default: illegal_instr = 1'b1;
                 endcase
               end else begin
@@ -867,7 +918,7 @@ module decoder
             3'b011: instruction_o.op = ariane_pkg::SLTU;  // Set to one if Lower Than Immediate Unsigned
             3'b100: instruction_o.op = ariane_pkg::XORL;  // Exclusive Or with Immediate
             3'b110: begin
-              if (CVA6Cfg.CMOEn && (instr.itype.rd == 5'b0)) begin
+              if (CVA6Cfg.CMOEn && (instr.stype.imm0 == 5'b0)) begin
                 instruction_o.fu = CMO;
                 instruction_o.rd = '0;
                 imm_select = SIMM;

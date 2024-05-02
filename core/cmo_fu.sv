@@ -24,10 +24,10 @@ module cmo_fu import ariane_pkg::*; (
     output exception_t                        cmo_exception_o,
     output riscv::xlen_t                      cmo_result_o,
     output logic                              cmo_valid_o,
-    //to L1I$
+    //to L1 I-Cache
     output ariane_pkg::cmo_req_t              cmo_ic_req_o,
     input  ariane_pkg::cmo_resp_t             cmo_ic_resp_i,
-    //to L1D$
+    //to L1 D-Cache
     output ariane_pkg::cmo_req_t              cmo_dc_req_o,
     input  ariane_pkg::cmo_resp_t             cmo_dc_resp_i
 //  }}}
@@ -44,27 +44,30 @@ module cmo_fu import ariane_pkg::*; (
         logic                     valid;
         logic [TRANS_ID_BITS-1:0] trans_id;
         riscv::xlen_t             address;
-        fu_op                     operator;
+        fu_op                     operation;
     } cmo_buf_t;
 
-    function automatic cmo_t cmo_fu_op_to_cmo_op(fu_op operator);
-        case (operator)
+    function automatic cmo_t cmo_fu_op_to_cmo_op(fu_op operation);
+        case (operation)
             FU_CMO_CLEAN:      return CMO_CLEAN;
             FU_CMO_FLUSH:      return CMO_FLUSH;
             FU_CMO_INVAL:      return CMO_INVAL;
             FU_CMO_ZERO:       return CMO_ZERO;
-            FU_CMO_CLEAN_ALL:  return CMO_CLEAN_ALL;
-            FU_CMO_FLUSH_ALL:  return CMO_FLUSH_ALL;
-            FU_CMO_INVAL_ALL:  return CMO_INVAL_ALL;
-            FU_CMO_PREFETCH_I: return CMO_PREFETCH_I;
+            FU_CMO_CLEAN_ALL:  return CMO_CLEAN_ALL; // Not part of CMO spec
+            FU_CMO_FLUSH_ALL:  return CMO_FLUSH_ALL; // Not part of CMO spec
+            FU_CMO_INVAL_ALL:  return CMO_INVAL_ALL; // Not part of CMO spec
+            FU_CMO_PREFETCH_I: return CMO_PREFETCH_I; 
             FU_CMO_PREFETCH_R: return CMO_PREFETCH_R;
             FU_CMO_PREFETCH_W: return CMO_PREFETCH_W;
             default:           return CMO_NONE;
         endcase
     endfunction
 
-    function automatic logic cmo_is_dc(fu_op operator);
-        case (operator)
+    // Check if the CMO instruction is related to data or instructions
+    // Only prefetch.i provides HINT to hardware that a cache block is 
+    // likely to be accessed by an instruction fetch in the near future
+    function automatic logic cmo_is_dc(fu_op operation);
+        case (operation)
             FU_CMO_CLEAN,
             FU_CMO_FLUSH,
             FU_CMO_INVAL,
@@ -84,7 +87,7 @@ module cmo_fu import ariane_pkg::*; (
     //  {{{
     cmo_fsm_t cmo_fsm_q, cmo_fsm_d;
     cmo_buf_t cmo_buf_q, cmo_buf_d;
-    logic is_cmo_ic_resp;
+    logic is_cmo_dc_resp;
     //  }}}
 
     //  CMO FSM combinational function
@@ -101,7 +104,7 @@ module cmo_fu import ariane_pkg::*; (
                     cmo_buf_d.valid = 1'b1;
                     cmo_buf_d.trans_id = fu_data_i.trans_id;
                     cmo_buf_d.address = fu_data_i.operand_a;
-                    cmo_buf_d.operator = fu_data_i.operation;
+                    cmo_buf_d.operation = fu_data_i.operation;
                     cmo_fsm_d = CMO_FORWARD;
                 end
             end
@@ -134,22 +137,22 @@ module cmo_fu import ariane_pkg::*; (
 
     //  CMO FSM request outputs to cache subsystem
     //  {{{
-    assign cmo_dc_req_o.req      = cmo_buf_q.valid & cmo_is_dc(cmo_buf_q.operator),
+    assign cmo_dc_req_o.req      = cmo_buf_q.valid & cmo_is_dc(cmo_buf_q.operation),
            cmo_dc_req_o.trans_id = cmo_buf_q.trans_id,
            cmo_dc_req_o.address  = cmo_buf_q.address,
-           cmo_dc_req_o.cmo_op   = cmo_fu_op_to_cmo_op(cmo_buf_q.operator);
+           cmo_dc_req_o.cmo_op   = cmo_fu_op_to_cmo_op(cmo_buf_q.operation);
 
-    assign cmo_ic_req_o.req      = cmo_buf_q.valid & ~cmo_is_dc(cmo_buf_q.operator),
+    assign cmo_ic_req_o.req      = cmo_buf_q.valid & ~cmo_is_dc(cmo_buf_q.operation),
            cmo_ic_req_o.trans_id = cmo_buf_q.trans_id,
            cmo_ic_req_o.address  = cmo_buf_q.address,
-           cmo_ic_req_o.cmo_op   = cmo_fu_op_to_cmo_op(cmo_buf_q.operator);
+           cmo_ic_req_o.cmo_op   = cmo_fu_op_to_cmo_op(cmo_buf_q.operation);
     //  }}}
 
     //  CMO FSM response inputs from cache subsystem
     //  {{{
-    assign is_cmo_ic_resp        = 1'b0; // FIXME
-    assign cmo_valid_o           = is_cmo_ic_resp ? cmo_ic_resp_i.ack      : cmo_dc_resp_i.ack,
-           cmo_trans_id_o        = is_cmo_ic_resp ? cmo_ic_resp_i.trans_id : cmo_dc_resp_i.trans_id,
+    assign is_cmo_dc_resp        = 1'b1; // FIXME: For now we only expect responses from the D-Cache
+    assign cmo_valid_o           = is_cmo_dc_resp ? cmo_dc_resp_i.ack      : cmo_ic_resp_i.ack,
+           cmo_trans_id_o        = is_cmo_dc_resp ? cmo_dc_resp_i.trans_id : cmo_ic_resp_i.trans_id,
            cmo_result_o          = '0,
            cmo_exception_o.cause = '0,
            cmo_exception_o.valid = '0,

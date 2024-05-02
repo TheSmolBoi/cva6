@@ -75,7 +75,11 @@ module id_stage #(
     // Trap sret - CSR_REGFILE
     input logic tsr_i,
     // Hypervisor user mode - CSR_REGFILE
-    input logic hu_i
+    input logic hu_i,
+    // xenvcfg for CBO instructions - CSR_REGFILE
+    input riscv::menvcfg_rv_t menvcfg_i,
+    input riscv::senvcfg_rv_t senvcfg_i,
+    input riscv::henvcfg_rv_t henvcfg_i
 );
   // ID/ISSUE register stage
   typedef struct packed {
@@ -121,9 +125,9 @@ module id_stage #(
   ) decoder_i (
       .debug_req_i,
       .irq_ctrl_i,
-      .clic_mode_i            (clic_mode_i),
-      .clic_irq_req_i         (clic_irq_req_i),
-      .clic_irq_cause_i       (clic_irq_cause_i),
+      .clic_mode_i,
+      .clic_irq_req_i,
+      .clic_irq_cause_i,
       .irq_i,
       .pc_i                   (fetch_entry_i.address),
       .is_compressed_i        (is_compressed),
@@ -132,9 +136,9 @@ module id_stage #(
       .compressed_instr_i     (fetch_entry_i.instruction[15:0]),
       .branch_predict_i       (fetch_entry_i.branch_predict),
       .ex_i                   (fetch_entry_i.ex),
-      .priv_lvl_i             (priv_lvl_i),
-      .v_i                    (v_i),
-      .debug_mode_i           (debug_mode_i),
+      .priv_lvl_i,
+      .v_i,
+      .debug_mode_i,
       .fs_i,
       .vfs_i,
       .frm_i,
@@ -146,7 +150,10 @@ module id_stage #(
       .hu_i,
       .instruction_o          (decoded_instruction),
       .orig_instr_o           (orig_instr),
-      .is_control_flow_instr_o(is_control_flow_instr)
+      .is_control_flow_instr_o(is_control_flow_instr),
+      .menvcfg_i,
+      .senvcfg_i,
+      .henvcfg_i,
   );
 
   // ------------------

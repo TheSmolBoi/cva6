@@ -155,13 +155,42 @@ package riscv;
   typedef struct packed {
     logic        stce;   // not implemented - requires Sctc extension
     logic        pbmte;  // not implemented - requires Svpbmt extension
-    logic [61:8] wpri1;  // writes preserved reads ignored
+    logic        adue;   // not implemented - requires Svadu extension
+    logic        cde;    // not implemented - requires Smcdeleg extension
+    logic [25:0] wpri2;  // writes preserved reads ignored
+    logic [1:0]  pmm;    // not implemented - requires Ssnpm extension
+    logic [23:0] wpri1;  // writes preserved reads ignored
     logic        cbze;   // not implemented - requires Zicboz extension
     logic        cbcfe;  // not implemented - requires Zicbom extension
     logic [1:0]  cbie;   // not implemented - requires Zicbom extension
     logic [2:0]  wpri0;  // writes preserved reads ignored
     logic        fiom;   // fence of I/O implies memory
-  } envcfg_rv_t;
+  } menvcfg_rv_t;
+  
+  typedef struct packed {
+    logic        stce;   // not implemented - requires Sctc extension
+    logic        pbmte;  // not implemented - requires Svpbmt extension
+    logic        adue;   // not implemented - requires Svadu extension
+    logic [26:0] wpri2;  // writes preserved reads ignored
+    logic [1:0]  pmm;    // not implemented - requires Ssnpm extension
+    logic [23:0] wpri1;  // writes preserved reads ignored
+    logic        cbze;   // not implemented - requires Zicboz extension
+    logic        cbcfe;  // not implemented - requires Zicbom extension
+    logic [1:0]  cbie;   // not implemented - requires Zicbom extension
+    logic [2:0]  wpri0;  // writes preserved reads ignored
+    logic        fiom;   // fence of I/O implies memory
+  } henvcfg_rv_t;
+  
+  typedef struct packed {
+    logic [XLEN-1:34] wpri2; // writes preserved reads ignored
+    logic [1:0]       pmm;   // not implemented - requires Ssnpm extension
+    logic [23:0]      wpri1; // writes preserved reads ignored
+    logic             cbze;  // not implemented - requires Zicboz extension
+    logic             cbcfe; // not implemented - requires Zicbom extension
+    logic [1:0]       cbie;  // not implemented - requires Zicbom extension
+    logic [2:0]       wpri0; // writes preserved reads ignored
+    logic             fiom;  // fence of I/O implies memory
+  } senvcfg_rv_t;
 
   typedef struct packed {
     logic [7:0] mil;
@@ -776,12 +805,24 @@ package riscv;
 
   localparam logic [63:0] MENVCFG_FIOM = 'h00000001;
   localparam logic [63:0] MENVCFG_CBIE = 'h00000030;
-  localparam logic [63:0] MENVCFG_CBFE = 'h00000040;
+  localparam logic [63:0] MENVCFG_CBCFE = 'h00000040;
   localparam logic [63:0] MENVCFG_CBZE = 'h00000080;
   localparam logic [63:0] MENVCFG_PBMTE = 64'h4000000000000000;
   localparam logic [63:0] MENVCFG_STCE = 64'h8000000000000000;
 
-
+  localparam logic [63:0] SENVCFG_FIOM = 'h00000001;
+  localparam logic [63:0] SENVCFG_CBIE = 'h00000030;
+  localparam logic [63:0] SENVCFG_CBCFE = 'h00000040;
+  localparam logic [63:0] SENVCFG_CBZE = 'h00000080;
+  localparam logic [63:0] SENVCFG_PBMTE = 64'h4000000000000000;
+  localparam logic [63:0] SENVCFG_STCE = 64'h8000000000000000;
+  
+  localparam logic [63:0] HENVCFG_FIOM = 'h00000001;
+  localparam logic [63:0] HENVCFG_CBIE = 'h00000030;
+  localparam logic [63:0] HENVCFG_CBCFE = 'h00000040;
+  localparam logic [63:0] HENVCFG_CBZE = 'h00000080;
+  localparam logic [63:0] HENVCFG_PBMTE = 64'h4000000000000000;
+  localparam logic [63:0] HENVCFG_STCE = 64'h8000000000000000;
 
   typedef enum logic [2:0] {
     CSRRW  = 3'h1,

@@ -452,6 +452,10 @@ module cva6
   riscv::pmpcfg_t [15:0] pmpcfg;
   logic [15:0][riscv::PLEN-3:0] pmpaddr;
   logic [31:0] mcountinhibit_csr_perf;
+  // CBO
+  riscv::menvcfg_rv_t menvcfg;
+  riscv::senvcfg_rv_t senvcfg;
+  riscv::henvcfg_rv_t henvcfg;
   // ----------------------------
   // Performance Counters <-> *
   // ----------------------------
@@ -610,7 +614,10 @@ module cva6
       .tw_i            (tw_csr_id),
       .vtw_i           (vtw_csr_id),
       .tsr_i           (tsr_csr_id),
-      .hu_i            (hu)
+      .hu_i            (hu),
+      .menvcfg_i       (menvcfg),
+      .senvcfg_i       (senvcfg),
+      .henvcfg_i       (henvcfg)
   );
 
   logic [NrWbPorts-1:0][TRANS_ID_BITS-1:0] trans_id_ex_id;
@@ -1145,6 +1152,9 @@ module cva6
       .pmpcfg_o                (pmpcfg),
       .pmpaddr_o               (pmpaddr),
       .mcountinhibit_o         (mcountinhibit_csr_perf),
+      .menvcfg_o               (menvcfg),
+      .senvcfg_o               (senvcfg),
+      .henvcfg_o               (henvcfg),
       .debug_req_i,
       .ipi_i,
       .irq_i,

@@ -182,7 +182,13 @@ module csr_regfile
     // PMP addresses - ACC_DISPATCHER
     output logic [15:0][riscv::PLEN-3:0] pmpaddr_o,
     // TO_BE_COMPLETED - PERF_COUNTERS
-    output logic [31:0] mcountinhibit_o
+    output logic [31:0] mcountinhibit_o,
+    // menvcfg for CBO - ID_STAGE
+    output riscv::menvcfg_rv_t menvcfg_o,
+    // senvcfg for CBO - ID_STAGE
+    output riscv::senvcfg_rv_t senvcfg_o,
+    // henvcfg for CBO - ID_STAGE
+    output riscv::henvcfg_rv_t henvcfg_o
 );
   // internal signal to keep track of access exceptions
   logic read_access_exception, update_access_exception, privilege_violation;
@@ -236,8 +242,9 @@ module csr_regfile
   riscv::xlen_t mtval_q, mtval_d;
   riscv::xlen_t mtinst_q, mtinst_d;
   riscv::xlen_t mtval2_q, mtval2_d;
-  logic fiom_d, fiom_q;
-
+  riscv::menvcfg_rv_t menvcfg_q, menvcfg_d;
+  riscv::senvcfg_rv_t senvcfg_q, senvcfg_d;
+  riscv::henvcfg_rv_t henvcfg_q, henvcfg_d;
   riscv::xlen_t stvec_q, stvec_d;
   riscv::intthresh_rv_t sintthresh_q, sintthresh_d;
   riscv::xlen_t scounteren_q, scounteren_d;
@@ -500,7 +507,7 @@ module csr_regfile
           end
         end
         riscv::CSR_SENVCFG:
-        if (CVA6Cfg.RVS) csr_rdata = '0 | fiom_q;
+        if (CVA6Cfg.RVS) csr_rdata = senvcfg_q;
         else read_access_exception = 1'b1;
         // hypervisor mode registers
         riscv::CSR_HSTATUS:
@@ -536,9 +543,14 @@ module csr_regfile
         riscv::CSR_HGEIP:
         if (CVA6Cfg.RVH) csr_rdata = '0;
         else read_access_exception = 1'b1;
-        riscv::CSR_HENVCFG:
-        if (CVA6Cfg.RVH) csr_rdata = '0 | fiom_q;
-        else read_access_exception = 1'b1;
+        riscv::CSR_HENVCFG: begin
+          if (CVA6Cfg.RVH) csr_rdata = henvcfg_q[riscv::XLEN-1:0]; // in case of XLEN=32 return lowest 32 bits
+          else read_access_exception = 1'b1;
+        end
+        riscv::CSR_HENVCFGH: begin
+          if (CVA6Cfg.RVH && riscv::XLEN == 32) csr_rdata = henvcfg_q[63:32]; // in case of XLEN=32 alias upper 32 bits
+          else read_access_exception = 1'b1;
+        end
         riscv::CSR_HGATP: begin
           if (CVA6Cfg.RVH) begin
             // intercept reads to HGATP if in HS-Mode and TVM is enabled
@@ -603,11 +615,11 @@ module csr_regfile
           end
         end
         riscv::CSR_MENVCFG: begin
-          if (CVA6Cfg.RVU) csr_rdata = '0 | fiom_q;
+          if (CVA6Cfg.RVU) csr_rdata = menvcfg_q[riscv::XLEN-1:0]; // in case of XLEN=32 return lowest 32 bits
           else read_access_exception = 1'b1;
         end
         riscv::CSR_MENVCFGH: begin
-          if (CVA6Cfg.RVU && riscv::XLEN == 32) csr_rdata = '0;
+          if (CVA6Cfg.RVU && riscv::XLEN == 32) csr_rdata = menvcfg_q[63:32]; // in case of XLEN=32 alias upper 32 bits of menvcfg
           else read_access_exception = 1'b1;
         end
         riscv::CSR_MVENDORID: csr_rdata = OPENHWGROUP_MVENDORID;
@@ -931,7 +943,9 @@ module csr_regfile
     mtval_d = mtval_q;
     mtinst_d = mtinst_q;
     mtval2_d = mtval2_q;
-    fiom_d = fiom_q;
+    menvcfg_d = menvcfg_q;
+    senvcfg_d = senvcfg_q;
+    henvcfg_d = henvcfg_q;
     dcache_d = dcache_q;
     icache_d = icache_q;
     acc_cons_d = acc_cons_q;
@@ -1219,7 +1233,7 @@ module csr_regfile
           end
         end
         riscv::CSR_SENVCFG:
-        if (CVA6Cfg.RVU) fiom_d = csr_wdata[0];
+        if (CVA6Cfg.RVU) senvcfg_d = csr_wdata;
         else update_access_exception = 1'b1;
         //hypervisor mode registers
         riscv::CSR_HSTATUS: begin
@@ -1332,9 +1346,14 @@ module csr_regfile
             update_access_exception = 1'b1;
           end
         end
-        riscv::CSR_HENVCFG:
-        if (CVA6Cfg.RVH) fiom_d = csr_wdata[0];
-        else update_access_exception = 1'b1;
+        riscv::CSR_HENVCFG: begin
+          if (CVA6Cfg.RVH) henvcfg_d[riscv:XLEN-1:0] = csr_wdata;
+          else update_access_exception = 1'b1;
+        end
+        riscv::CSR_HENVCFGH: begin
+          if (CVA6Cfg.RVH && riscv::XLEN == 32) henvcfg_d[63:32] = csr_wdata;
+          else update_access_exception = 1'b1;
+        end
         riscv::CSR_MSTATUS: begin
           mstatus_d    = {{64 - riscv::XLEN{1'b0}}, csr_wdata};
           mstatus_d.xs = riscv::Off;
@@ -1456,9 +1475,13 @@ module csr_regfile
             mip_d = (mip_q & ~mask) | (csr_wdata & mask);
           end
         end
-        riscv::CSR_MENVCFG: if (CVA6Cfg.RVU) fiom_d = csr_wdata[0];
+        riscv::CSR_MENVCFG: begin
+          if (CVA6Cfg.RVU) menvcfg_d[riscv::XLEN-1:0] = csr_wdata;
+          else update_access_exception = 1'b1;
+        end
         riscv::CSR_MENVCFGH: begin
-          if (!CVA6Cfg.RVU || riscv::XLEN != 32) update_access_exception = 1'b1;
+          if (CVA6Cfg.RVU && riscv::XLEN == 32) menvcfg_d[63:32] = csr_wdata;
+          else update_access_exception = 1'b1;
         end
         riscv::CSR_MCOUNTINHIBIT:
         if (PERF_COUNTER_EN) mcountinhibit_d = {csr_wdata[MHPMCounterNum+2:2], 1'b0, csr_wdata[0]};
@@ -2348,7 +2371,7 @@ module csr_regfile
       default: ;
     endcase
   end
-
+  
   // in debug mode we execute with privilege level M
   assign priv_lvl_o = (CVA6Cfg.DebugEn && debug_mode_q) ? riscv::PRIV_LVL_M : priv_lvl_q;
   assign v_o = CVA6Cfg.RVH ? v_q : 1'b0;
@@ -2366,6 +2389,10 @@ module csr_regfile
   assign sum_o = mstatus_q.sum;
   assign vs_sum_o = CVA6Cfg.RVH ? vsstatus_q.sum : '0;
   assign hu_o = CVA6Cfg.RVH ? hstatus_q.hu : '0;
+  // CBO envcfg outputs
+  assign menvcfg_o = CVA6Cfg.RVU ? menvcfg_q : '0;
+  assign senvcfg_o = CVA6Cfg.RVS ? senvcfg_q : '0;
+  assign henvcfg_o = CVA6Cfg.RVH ? henvcfg_q : '0;
   // we support bare memory addressing and SV39
   if (CVA6Cfg.RVH) begin
     assign en_translation_o = (((riscv::vm_mode_t'(satp_q.mode) == riscv::MODE_SV && !v_q) || (riscv::vm_mode_t'(vsatp_q.mode) == riscv::MODE_SV && v_q)) &&
@@ -2437,7 +2464,9 @@ module csr_regfile
       mtvt_q           <= {riscv::XLEN{1'b0}};
       mscratch_q       <= {riscv::XLEN{1'b0}};
       mtval_q          <= {riscv::XLEN{1'b0}};
-      fiom_q           <= '0;
+      menvcfg_q        <= 64'hC0000000000000F1; // FIXME: this hardcode certainly isn't good
+      senvcfg_q        <= 64'hC0000000000000F1; // FIXME: this hardcode certainly isn't good
+      henvcfg_q        <= 64'hC0000000000000F1; // FIXME: this hardcode certainly isn't good
       dcache_q         <= {{riscv::XLEN - 1{1'b0}}, 1'b1};
       icache_q         <= {{riscv::XLEN - 1{1'b0}}, 1'b1};
       mcountinhibit_q  <= '0;
@@ -2522,7 +2551,9 @@ module csr_regfile
       mtvt_q           <= mtvt_d;
       mscratch_q       <= mscratch_d;
       if (CVA6Cfg.TvalEn) mtval_q <= mtval_d;
-      fiom_q          <= fiom_d;
+      menvcfg_q       <= menvcfg_d;
+      senvcfg_q       <= senvcfg_d;
+      henvcfg_q       <= henvcfg_d;
       dcache_q        <= dcache_d;
       icache_q        <= icache_d;
       mcountinhibit_q <= mcountinhibit_d;
