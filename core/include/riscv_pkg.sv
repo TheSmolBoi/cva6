@@ -158,9 +158,9 @@ package riscv;
     logic        adue;   // not implemented - requires Svadu extension
     logic        cde;    // not implemented - requires Smcdeleg extension
     logic [25:0] wpri2;  // writes preserved reads ignored
-    logic [1:0]  pmm;    // not implemented - requires Ssnpm extension
+    logic [1:0]  pmm;    // not implemented - requires Smnpm extension
     logic [23:0] wpri1;  // writes preserved reads ignored
-    logic        cbze;   // not implemented - requires Zicboz extension
+    logic        cbze;   // controls cbo.zero
     logic        cbcfe;  // not implemented - requires Zicbom extension
     logic [1:0]  cbie;   // not implemented - requires Zicbom extension
     logic [2:0]  wpri0;  // writes preserved reads ignored
@@ -172,9 +172,9 @@ package riscv;
     logic        pbmte;  // not implemented - requires Svpbmt extension
     logic        adue;   // not implemented - requires Svadu extension
     logic [26:0] wpri2;  // writes preserved reads ignored
-    logic [1:0]  pmm;    // not implemented - requires Ssnpm extension
+    logic [1:0]  pmm;    // not implemented - requires Smnpm extension
     logic [23:0] wpri1;  // writes preserved reads ignored
-    logic        cbze;   // not implemented - requires Zicboz extension
+    logic        cbze;   // controls cbo.zero
     logic        cbcfe;  // not implemented - requires Zicbom extension
     logic [1:0]  cbie;   // not implemented - requires Zicbom extension
     logic [2:0]  wpri0;  // writes preserved reads ignored
@@ -183,9 +183,9 @@ package riscv;
   
   typedef struct packed {
     logic [XLEN-1:34] wpri2; // writes preserved reads ignored
-    logic [1:0]       pmm;   // not implemented - requires Ssnpm extension
+    logic [1:0]       pmm;   // not implemented - requires Smnpm extension
     logic [23:0]      wpri1; // writes preserved reads ignored
-    logic             cbze;  // not implemented - requires Zicboz extension
+    logic             cbze;  // controls cbo.zero
     logic             cbcfe; // not implemented - requires Zicbom extension
     logic [1:0]       cbie;  // not implemented - requires Zicbom extension
     logic [2:0]       wpri0; // writes preserved reads ignored
@@ -803,24 +803,30 @@ package riscv;
   localparam logic [63:0] MSTATUS_SXL = {28'h0000000, IS_XLEN64, IS_XLEN64, 34'h00000000};
   localparam logic [63:0] MSTATUS_SD = {IS_XLEN64, 31'h00000000, ~IS_XLEN64, 31'h00000000};
 
-  localparam logic [63:0] MENVCFG_FIOM = 'h00000001;
-  localparam logic [63:0] MENVCFG_CBIE = 'h00000030;
-  localparam logic [63:0] MENVCFG_CBCFE = 'h00000040;
-  localparam logic [63:0] MENVCFG_CBZE = 'h00000080;
+  localparam logic [63:0] MENVCFG_FIOM  = 64'h0000000000000001;
+  localparam logic [63:0] MENVCFG_CBIE  = 64'h0000000000000030;
+  localparam logic [63:0] MENVCFG_CBCFE = 64'h0000000000000040;
+  localparam logic [63:0] MENVCFG_CBZE  = 64'h0000000000000080;
+  localparam logic [63:0] MENVCFG_PMM   = 64'h0000000300000000;
+  localparam logic [63:0] MENVCFG_CDE   = 64'h1000000000000000;
+  localparam logic [63:0] MENVCFG_ADUE  = 64'h2000000000000000;
   localparam logic [63:0] MENVCFG_PBMTE = 64'h4000000000000000;
-  localparam logic [63:0] MENVCFG_STCE = 64'h8000000000000000;
+  localparam logic [63:0] MENVCFG_STCE  = 64'h8000000000000000;
 
-  localparam logic [63:0] SENVCFG_FIOM = 'h00000001;
-  localparam logic [63:0] SENVCFG_CBIE = 'h00000030;
-  localparam logic [63:0] SENVCFG_CBCFE = 'h00000040;
-  localparam logic [63:0] SENVCFG_CBZE = 'h00000080;
+  localparam logic [63:0] SENVCFG_FIOM  = 64'h0000000000000001;
+  localparam logic [63:0] SENVCFG_CBIE  = 64'h0000000000000030;
+  localparam logic [63:0] SENVCFG_CBCFE = 64'h0000000000000040;
+  localparam logic [63:0] SENVCFG_CBZE  = 64'h0000000000000080;
+  localparam logic [63:0] SENVCFG_PMM   = 64'h0000000300000000;
   
-  localparam logic [63:0] HENVCFG_FIOM = 'h00000001;
-  localparam logic [63:0] HENVCFG_CBIE = 'h00000030;
-  localparam logic [63:0] HENVCFG_CBCFE = 'h00000040;
-  localparam logic [63:0] HENVCFG_CBZE = 'h00000080;
+  localparam logic [63:0] HENVCFG_FIOM  = 64'h0000000000000001;
+  localparam logic [63:0] HENVCFG_CBIE  = 64'h0000000000000030;
+  localparam logic [63:0] HENVCFG_CBCFE = 64'h0000000000000040;
+  localparam logic [63:0] HENVCFG_CBZE  = 64'h0000000000000080;
+  localparam logic [63:0] HENVCFG_PMM   = 64'h0000000300000000;
+  localparam logic [63:0] HENVCFG_ADUE  = 64'h2000000000000000;
   localparam logic [63:0] HENVCFG_PBMTE = 64'h4000000000000000;
-  localparam logic [63:0] HENVCFG_STCE = 64'h8000000000000000;
+  localparam logic [63:0] HENVCFG_STCE  = 64'h8000000000000000;
 
   typedef enum logic [2:0] {
     CSRRW  = 3'h1,

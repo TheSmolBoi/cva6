@@ -1232,9 +1232,13 @@ module csr_regfile
             update_access_exception = 1'b1;
           end
         end
-        riscv::CSR_SENVCFG:
-        if (CVA6Cfg.RVU) senvcfg_d = csr_wdata;
-        else update_access_exception = 1'b1;
+        riscv::CSR_SENVCFG: begin
+          // FIXME: PMM defined by Smnpm extension
+          mask = riscv::SENVCFG_PMM | riscv::SENVCFG_CBZE | riscv::SENVCFG_CBCFE | riscv::SENVCFG_CBIE |
+                 riscv::SENVCFG_FIOM
+          if (CVA6Cfg.RVU) senvcfg_d = csr_wdata & mask;
+          else update_access_exception = 1'b1;
+        end
         //hypervisor mode registers
         riscv::CSR_HSTATUS: begin
           if (CVA6Cfg.RVH) begin
@@ -1347,11 +1351,27 @@ module csr_regfile
           end
         end
         riscv::CSR_HENVCFG: begin
-          if (CVA6Cfg.RVH) henvcfg_d[riscv:XLEN-1:0] = csr_wdata;
-          else update_access_exception = 1'b1;
+          // FIXME: PBMTE read-only zero if Svpbmt not implemented
+          // FIXME: ADUE read-only zero if Svadu not implemented
+          // FIXME: STCE defined by Ssct extention
+          // FIXME: PMM defined by Smnpm extension
+          mask = riscv::HENVCFG_STCE | (riscv::HENVCFG_PBMTE & menvcfg_q.pbmte) |
+                 (riscv::HENVCFG_ADUE & menvcfg_q.adue) | riscv::HENVCFG_PMM | riscv::HENVCFG_CBZE | 
+                 riscv::HENVCFG_CBCFE | riscv::HENVCFG_CBIE | riscv::HENVCFG_FIOM
+          if (CVA6Cfg.RVH) begin
+            henvcfg_d[riscv:XLEN-1:0] = csr_wdata[riscv:XLEN-1:0] & mask[riscv:XLEN-1:0];
+          end else begin
+            update_access_exception = 1'b1;
+          end
         end
         riscv::CSR_HENVCFGH: begin
-          if (CVA6Cfg.RVH && riscv::XLEN == 32) henvcfg_d[63:32] = csr_wdata;
+          // FIXME: PBMTE read-only zero if Svpbmt not implemented or if menvcfg.pbmte is zero
+          // FIXME: ADUE read-only zero if Svadu not implemented  or if menvcfg.adue is zero
+          // FIXME: STCE defined by Ssct extention
+          // FIXME: PMM defined by Smnpm extension
+          mask = riscv::HENVCFG_STCE | (riscv::HENVCFG_PBMTE & menvcfg_q.pbmte) |
+                 (riscv::HENVCFG_ADUE & menvcfg_q.adue) | riscv::HENVCFG_PMM
+          if (CVA6Cfg.RVH && riscv::XLEN == 32) henvcfg_d[63:32] = csr_wdata & mask[63:32];
           else update_access_exception = 1'b1;
         end
         riscv::CSR_MSTATUS: begin
@@ -1476,12 +1496,33 @@ module csr_regfile
           end
         end
         riscv::CSR_MENVCFG: begin
-          if (CVA6Cfg.RVU) menvcfg_d[riscv::XLEN-1:0] = csr_wdata;
-          else update_access_exception = 1'b1;
+          // FIXME: PBMTE read-only zero if Svpbmt not implemented
+          // FIXME: ADUE read-only zero if Svadu not implemented
+          // FIXME: CDE read-oly zero if Smcdeleg not implemented
+          // FIXME: STCE defined by Ssct extention
+          // FIXME: PMM defined by Smnpm extension
+          mask = riscv::MENVCFG_STCE | (riscv::MENVCFG_PBMTE & 0) | (riscv::MENVCFG_ADUE & 0) |
+                 (riscv::MENVCFG_CDE & 0) | riscv::MENVCFG_PMM | riscv::MENVCFG_CBZE |
+                 riscv::MENVCFG_CBCFE | riscv::MENVCFG_CBIE | riscv::MENVCFG_FIOM
+          if (CVA6Cfg.RVU) begin
+            menvcfg_d[riscv::XLEN-1:0] = csr_wdata[riscv::XLEN-1:0] & mask[riscv::XLEN-1:0];
+          end else begin
+            update_access_exception = 1'b1;
+          end
         end
         riscv::CSR_MENVCFGH: begin
-          if (CVA6Cfg.RVU && riscv::XLEN == 32) menvcfg_d[63:32] = csr_wdata;
-          else update_access_exception = 1'b1;
+          // FIXME: PBMTE read-only zero if Svpbmt not implemented
+          // FIXME: ADUE read-only zero if Svadu not implemented
+          // FIXME: CDE read-oly zero if Smcdeleg not implemented
+          // FIXME: STCE defined by Ssct extention
+          // FIXME: PMM defined by Smnpm extension
+          mask = riscv::MENVCFG_STCE | (riscv::MENVCFG_PBMTE & 0) | (riscv::MENVCFG_ADUE & 0) |
+                 (riscv::MENVCFG_CDE & 0) | riscv::MENVCFG_PMM
+          if (CVA6Cfg.RVU && riscv::XLEN == 32) begin
+            menvcfg_d[63:32] = csr_wdata & mask[63:32];
+          end else begin
+            update_access_exception = 1'b1;
+          end
         end
         riscv::CSR_MCOUNTINHIBIT:
         if (PERF_COUNTER_EN) mcountinhibit_d = {csr_wdata[MHPMCounterNum+2:2], 1'b0, csr_wdata[0]};
