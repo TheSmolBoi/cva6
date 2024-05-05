@@ -1238,7 +1238,7 @@ module csr_regfile
           // FIXME: LPE defined by Zicfiss extension
           mask = riscv::SENVCFG_PMM | riscv::SENVCFG_CBZE | riscv::SENVCFG_CBCFE | riscv::SENVCFG_CBIE |
                  (riscv::SENVCFG_SSE & henvcfg_q.sse) | riscv::SENVCFG_LPE | riscv::SENVCFG_FIOM    
-          if (CVA6Cfg.RVU) senvcfg_d[riscv::XLEN-1:0] = csr_wdata & mask[riscv::XLEN-1:0];
+          if (CVA6Cfg.RVU) senvcfg_d[riscv::XLEN-1:0] = csr_wdata[riscv::XLEN-1:0] & mask[riscv::XLEN-1:0];
           else update_access_exception = 1'b1;
         end
         //hypervisor mode registers

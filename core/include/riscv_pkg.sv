@@ -823,12 +823,16 @@ package riscv;
   localparam logic [63:0] MENVCFG_STCE  = 64'h8000000000000000;
 
   localparam logic [63:0] SENVCFG_FIOM  = 64'h0000000000000001;
+  localparam logic [63:0] SENVCFG_LPE   = 64'h0000000000000004;
+  localparam logic [63:0] SENVCFG_SSE   = 64'h0000000000000008;
   localparam logic [63:0] SENVCFG_CBIE  = 64'h0000000000000030;
   localparam logic [63:0] SENVCFG_CBCFE = 64'h0000000000000040;
   localparam logic [63:0] SENVCFG_CBZE  = 64'h0000000000000080;
   localparam logic [63:0] SENVCFG_PMM   = 64'h0000000300000000;
   
   localparam logic [63:0] HENVCFG_FIOM  = 64'h0000000000000001;
+  localparam logic [63:0] HENVCFG_LPE   = 64'h0000000000000004;
+  localparam logic [63:0] HENVCFG_SSE   = 64'h0000000000000008;  
   localparam logic [63:0] HENVCFG_CBIE  = 64'h0000000000000030;
   localparam logic [63:0] HENVCFG_CBCFE = 64'h0000000000000040;
   localparam logic [63:0] HENVCFG_CBZE  = 64'h0000000000000080;
