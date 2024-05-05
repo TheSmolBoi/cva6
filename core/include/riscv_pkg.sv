@@ -163,7 +163,9 @@ package riscv;
     logic        cbze;   // controls cbo.zero
     logic        cbcfe;  // not implemented - requires Zicbom extension
     logic [1:0]  cbie;   // not implemented - requires Zicbom extension
-    logic [2:0]  wpri0;  // writes preserved reads ignored
+    logic        sse;    // not implemented - requires Zicfiss extension
+    logic        lpe;    // not implemented - requires Zicfilp extension
+    logic        wpri0;  // writes preserved reads ignored
     logic        fiom;   // fence of I/O implies memory
   } menvcfg_rv_t;
   
@@ -177,18 +179,23 @@ package riscv;
     logic        cbze;   // controls cbo.zero
     logic        cbcfe;  // not implemented - requires Zicbom extension
     logic [1:0]  cbie;   // not implemented - requires Zicbom extension
-    logic [2:0]  wpri0;  // writes preserved reads ignored
+    logic        sse;    // not implemented - requires Zicfiss extension
+    logic        lpe;    // not implemented - requires Zicfilp extension
+    logic        wpri0;  // writes preserved reads ignored
     logic        fiom;   // fence of I/O implies memory
   } henvcfg_rv_t;
   
   typedef struct packed {
-    logic [XLEN-1:34] wpri2; // writes preserved reads ignored
+    logic [63:34]     wpri3; // writes preserved reads ignored
     logic [1:0]       pmm;   // not implemented - requires Smnpm extension
-    logic [23:0]      wpri1; // writes preserved reads ignored
+    logic [23:0]      wpri2; // writes preserved reads ignored
     logic             cbze;  // controls cbo.zero
     logic             cbcfe; // not implemented - requires Zicbom extension
     logic [1:0]       cbie;  // not implemented - requires Zicbom extension
-    logic [2:0]       wpri0; // writes preserved reads ignored
+    logic             wpri1; // writes preserved reads ignored
+    logic             lpe;   // not implemented - requires Zicfilp extension
+    logic             sse;   // not implemented - requires Zicfiss extension
+    logic             wpri0; // writes preserved reads ignored
     logic             fiom;  // fence of I/O implies memory
   } senvcfg_rv_t;
 
@@ -804,6 +811,8 @@ package riscv;
   localparam logic [63:0] MSTATUS_SD = {IS_XLEN64, 31'h00000000, ~IS_XLEN64, 31'h00000000};
 
   localparam logic [63:0] MENVCFG_FIOM  = 64'h0000000000000001;
+  localparam logic [63:0] MENVCFG_LPE   = 64'h0000000000000004;
+  localparam logic [63:0] MENVCFG_SSE   = 64'h0000000000000008;
   localparam logic [63:0] MENVCFG_CBIE  = 64'h0000000000000030;
   localparam logic [63:0] MENVCFG_CBCFE = 64'h0000000000000040;
   localparam logic [63:0] MENVCFG_CBZE  = 64'h0000000000000080;

@@ -1234,9 +1234,11 @@ module csr_regfile
         end
         riscv::CSR_SENVCFG: begin
           // FIXME: PMM defined by Smnpm extension
+          // FIXME: SSE defined by Zicfilp extension
+          // FIXME: LPE defined by Zicfiss extension
           mask = riscv::SENVCFG_PMM | riscv::SENVCFG_CBZE | riscv::SENVCFG_CBCFE | riscv::SENVCFG_CBIE |
-                 riscv::SENVCFG_FIOM
-          if (CVA6Cfg.RVU) senvcfg_d = csr_wdata & mask;
+                 (riscv::SENVCFG_SSE & henvcfg_q.sse) | riscv::SENVCFG_LPE | riscv::SENVCFG_FIOM    
+          if (CVA6Cfg.RVU) senvcfg_d[riscv::XLEN-1:0] = csr_wdata & mask[riscv::XLEN-1:0];
           else update_access_exception = 1'b1;
         end
         //hypervisor mode registers
@@ -1355,9 +1357,12 @@ module csr_regfile
           // FIXME: ADUE read-only zero if Svadu not implemented
           // FIXME: STCE defined by Ssct extention
           // FIXME: PMM defined by Smnpm extension
+          // FIXME: SSE defined by Zicfiss extension
+          // FIXME: LPE defined by Zicfilp extension
           mask = riscv::HENVCFG_STCE | (riscv::HENVCFG_PBMTE & menvcfg_q.pbmte) |
                  (riscv::HENVCFG_ADUE & menvcfg_q.adue) | riscv::HENVCFG_PMM | riscv::HENVCFG_CBZE | 
-                 riscv::HENVCFG_CBCFE | riscv::HENVCFG_CBIE | riscv::HENVCFG_FIOM
+                 riscv::HENVCFG_CBCFE | riscv::HENVCFG_CBIE | (riscv::HENVCFG_SSE & menvcfg_q.sse) |
+                 (riscv::HENVCFG_LPE & 0) | riscv::HENVCFG_FIOM
           if (CVA6Cfg.RVH) begin
             henvcfg_d[riscv:XLEN-1:0] = csr_wdata[riscv:XLEN-1:0] & mask[riscv:XLEN-1:0];
           end else begin
@@ -1501,9 +1506,12 @@ module csr_regfile
           // FIXME: CDE read-oly zero if Smcdeleg not implemented
           // FIXME: STCE defined by Ssct extention
           // FIXME: PMM defined by Smnpm extension
+          // FIXME: SSE defined by Zicfiss
+          // FIXME: LPE defined by Zicfilp
           mask = riscv::MENVCFG_STCE | (riscv::MENVCFG_PBMTE & 0) | (riscv::MENVCFG_ADUE & 0) |
                  (riscv::MENVCFG_CDE & 0) | riscv::MENVCFG_PMM | riscv::MENVCFG_CBZE |
-                 riscv::MENVCFG_CBCFE | riscv::MENVCFG_CBIE | riscv::MENVCFG_FIOM
+                 riscv::MENVCFG_CBCFE | riscv::MENVCFG_CBIE | (riscv::MENVCFG_SSE & 0) |
+                 (riscv::MENVCFG_LPE & 0) | riscv::MENVCFG_FIOM
           if (CVA6Cfg.RVU) begin
             menvcfg_d[riscv::XLEN-1:0] = csr_wdata[riscv::XLEN-1:0] & mask[riscv::XLEN-1:0];
           end else begin
