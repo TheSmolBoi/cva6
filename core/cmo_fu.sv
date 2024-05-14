@@ -13,23 +13,23 @@
 module cmo_fu import ariane_pkg::*; (
 //  Ports
 //  {{{
-    input  logic                              clk_i,
-    input  logic                              rst_ni,
-    input  fu_data_t                          fu_data_i,
+    input  logic                                 clk_i,
+    input  logic                                 rst_ni,
+    input  ariane_pkg::fu_data_t                 fu_data_i,
     //from issue
-    input  logic                              cmo_valid_i,
-    output logic                              cmo_ready_o,
+    input  logic                                 cmo_valid_i,
+    output logic                                 cmo_ready_o,
     //to writeback
-    output logic [TRANS_ID_BITS-1:0]          cmo_trans_id_o,
-    output exception_t                        cmo_exception_o,
-    output riscv::xlen_t                      cmo_result_o,
-    output logic                              cmo_valid_o,
+    output logic [ariane_pkg::TRANS_ID_BITS-1:0] cmo_trans_id_o,
+    output ariane_pkg::exception_t               cmo_exception_o,
+    output logic [riscv::XLEN-1:0]               cmo_result_o,
+    output logic                                 cmo_valid_o,
     //to L1 I-Cache
-    output ariane_pkg::cmo_req_t              cmo_ic_req_o,
-    input  ariane_pkg::cmo_resp_t             cmo_ic_resp_i,
+    output ariane_pkg::cmo_req_t                 cmo_ic_req_o,
+    input  ariane_pkg::cmo_resp_t                cmo_ic_resp_i,
     //to L1 D-Cache
-    output ariane_pkg::cmo_req_t              cmo_dc_req_o,
-    input  ariane_pkg::cmo_resp_t             cmo_dc_resp_i
+    output ariane_pkg::cmo_req_t                 cmo_dc_req_o,
+    input  ariane_pkg::cmo_resp_t                cmo_dc_resp_i
 //  }}}
 );
 
@@ -41,13 +41,13 @@ module cmo_fu import ariane_pkg::*; (
     } cmo_fsm_t;
 
     typedef struct packed {
-        logic                     valid;
-        logic [TRANS_ID_BITS-1:0] trans_id;
-        riscv::xlen_t             address;
-        fu_op                     operation;
+        logic                                 valid;
+        logic [ariage_pkg::TRANS_ID_BITS-1:0] trans_id;
+        logic [riscv::XLEN-1:0]               address;
+        ariane_pkg::fu_op                     operation;
     } cmo_buf_t;
 
-    function automatic cmo_t cmo_fu_op_to_cmo_op(fu_op operation);
+    function automatic cmo_t cmo_fu_op_to_cmo_op(ariane_pkg::fu_op operation);
         case (operation)
             FU_CMO_CLEAN:      return CMO_CLEAN;
             FU_CMO_FLUSH:      return CMO_FLUSH;
@@ -66,7 +66,7 @@ module cmo_fu import ariane_pkg::*; (
     // Check if the CMO instruction is related to data or instructions
     // Only prefetch.i provides HINT to hardware that a cache block is 
     // likely to be accessed by an instruction fetch in the near future
-    function automatic logic cmo_is_dc(fu_op operation);
+    function automatic logic cmo_is_dc(ariane_pkg::fu_op operation);
         case (operation)
             FU_CMO_CLEAN,
             FU_CMO_FLUSH,

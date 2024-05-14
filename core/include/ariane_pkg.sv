@@ -420,14 +420,17 @@ package ariane_pkg;
     CSR_SET,
     CSR_CLEAR,
     FENCE_T,
-    // CMO functions
+    // Zicbom instructions
     FU_CMO_CLEAN,
     FU_CMO_FLUSH,
     FU_CMO_INVAL,
+    // Zicboz instructions
     FU_CMO_ZERO,
+    // Not part of RiscV spec
     FU_CMO_CLEAN_ALL,
     FU_CMO_FLUSH_ALL,
     FU_CMO_INVAL_ALL,
+    // Zicbop instructions
     FU_CMO_PREFETCH_I,
     FU_CMO_PREFETCH_R,
     FU_CMO_PREFETCH_W,
@@ -926,7 +929,7 @@ package ariane_pkg;
     logic                     req;      // this request is valid
     cmo_t                     cmo_op;   // CMO to perform
     logic [TRANS_ID_BITS-1:0] trans_id; // index of the scoreboard entry
-    logic [63:0]              address;  // target address
+    logic [riscv::XLEN-1:0]   address;  // target address
   } cmo_req_t;
   
   // CMO response from cache.

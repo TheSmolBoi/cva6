@@ -83,7 +83,7 @@ module issue_stage
     output logic csr_valid_o,
     // CMO is ready - EX_STAGE
     input logic cmo_ready_i,
-    // CMO is valid _ Ex_STAGE
+    // CMO is valid - Ex_STAGE
     output logic cmo_valid_o,
     // CVXIF FU is valid - EX_STAGE
     output logic x_issue_valid_o,
@@ -227,6 +227,8 @@ module issue_stage
       .alu_valid_o        (alu_valid_o),
       .branch_valid_o     (branch_valid_o),
       .csr_valid_o        (csr_valid_o),
+      .cmo_ready_i        (cmo_ready_i),
+      .cmo_valid_o        (cmo_valid_o),
       .cvxif_valid_o      (x_issue_valid_o),
       .cvxif_ready_i      (x_issue_ready_i),
       .cvxif_off_instr_o  (x_off_instr_o),

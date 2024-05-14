@@ -71,7 +71,7 @@ module ex_stage
     output logic                                   cmo_ready_o,        // FU is ready
     input  logic                                   cmo_valid_i,        // Input is valid
     output logic [TRANS_ID_BITS-1:0]               cmo_trans_id_o,
-    output riscv::xlen_t                           cmo_result_o,
+    output logic [riscv::XLEN-1:0]                 cmo_result_o,
     output logic                                   cmo_valid_o,
     output exception_t                             cmo_exception_o,
     // interface to caches for CMOs

@@ -153,7 +153,7 @@ module id_stage #(
       .is_control_flow_instr_o(is_control_flow_instr),
       .menvcfg_i,
       .senvcfg_i,
-      .henvcfg_i,
+      .henvcfg_i
   );
 
   // ------------------

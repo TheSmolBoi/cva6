@@ -1237,7 +1237,7 @@ module csr_regfile
           // FIXME: SSE defined by Zicfilp extension
           // FIXME: LPE defined by Zicfiss extension
           mask = riscv::SENVCFG_PMM | riscv::SENVCFG_CBZE | riscv::SENVCFG_CBCFE | riscv::SENVCFG_CBIE |
-                 (riscv::SENVCFG_SSE & henvcfg_q.sse) | riscv::SENVCFG_LPE | riscv::SENVCFG_FIOM    
+                 (riscv::SENVCFG_SSE & henvcfg_q.sse) | riscv::SENVCFG_LPE | riscv::SENVCFG_FIOM;
           if (CVA6Cfg.RVU) senvcfg_d[riscv::XLEN-1:0] = csr_wdata[riscv::XLEN-1:0] & mask[riscv::XLEN-1:0];
           else update_access_exception = 1'b1;
         end
@@ -1362,9 +1362,9 @@ module csr_regfile
           mask = riscv::HENVCFG_STCE | (riscv::HENVCFG_PBMTE & menvcfg_q.pbmte) |
                  (riscv::HENVCFG_ADUE & menvcfg_q.adue) | riscv::HENVCFG_PMM | riscv::HENVCFG_CBZE | 
                  riscv::HENVCFG_CBCFE | riscv::HENVCFG_CBIE | (riscv::HENVCFG_SSE & menvcfg_q.sse) |
-                 (riscv::HENVCFG_LPE & 0) | riscv::HENVCFG_FIOM
+                 (riscv::HENVCFG_LPE & 0) | riscv::HENVCFG_FIOM;
           if (CVA6Cfg.RVH) begin
-            henvcfg_d[riscv:XLEN-1:0] = csr_wdata[riscv:XLEN-1:0] & mask[riscv:XLEN-1:0];
+            henvcfg_d[riscv::XLEN-1:0] = csr_wdata[riscv::XLEN-1:0] & mask[riscv::XLEN-1:0];
           end else begin
             update_access_exception = 1'b1;
           end
@@ -1375,7 +1375,7 @@ module csr_regfile
           // FIXME: STCE defined by Ssct extention
           // FIXME: PMM defined by Smnpm extension
           mask = riscv::HENVCFG_STCE | (riscv::HENVCFG_PBMTE & menvcfg_q.pbmte) |
-                 (riscv::HENVCFG_ADUE & menvcfg_q.adue) | riscv::HENVCFG_PMM
+                 (riscv::HENVCFG_ADUE & menvcfg_q.adue) | riscv::HENVCFG_PMM;
           if (CVA6Cfg.RVH && riscv::XLEN == 32) henvcfg_d[63:32] = csr_wdata & mask[63:32];
           else update_access_exception = 1'b1;
         end
@@ -1511,7 +1511,7 @@ module csr_regfile
           mask = riscv::MENVCFG_STCE | (riscv::MENVCFG_PBMTE & 0) | (riscv::MENVCFG_ADUE & 0) |
                  (riscv::MENVCFG_CDE & 0) | riscv::MENVCFG_PMM | riscv::MENVCFG_CBZE |
                  riscv::MENVCFG_CBCFE | riscv::MENVCFG_CBIE | (riscv::MENVCFG_SSE & 0) |
-                 (riscv::MENVCFG_LPE & 0) | riscv::MENVCFG_FIOM
+                 (riscv::MENVCFG_LPE & 0) | riscv::MENVCFG_FIOM;
           if (CVA6Cfg.RVU) begin
             menvcfg_d[riscv::XLEN-1:0] = csr_wdata[riscv::XLEN-1:0] & mask[riscv::XLEN-1:0];
           end else begin
@@ -1525,7 +1525,7 @@ module csr_regfile
           // FIXME: STCE defined by Ssct extention
           // FIXME: PMM defined by Smnpm extension
           mask = riscv::MENVCFG_STCE | (riscv::MENVCFG_PBMTE & 0) | (riscv::MENVCFG_ADUE & 0) |
-                 (riscv::MENVCFG_CDE & 0) | riscv::MENVCFG_PMM
+                 (riscv::MENVCFG_CDE & 0) | riscv::MENVCFG_PMM;
           if (CVA6Cfg.RVU && riscv::XLEN == 32) begin
             menvcfg_d[63:32] = csr_wdata & mask[63:32];
           end else begin
